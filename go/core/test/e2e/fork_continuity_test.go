@@ -16,7 +16,9 @@ import (
 	adka2a "github.com/kagent-dev/kagent/go/adk/pkg/a2a"
 	apiv1alpha1 "github.com/kagent-dev/kagent/go/api/gen/kagent/api/v1alpha1"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -35,7 +37,9 @@ func TestAgentInstancePausedTaskForkContinuity(t *testing.T) {
 		ctx, cancel := context.WithTimeout(metadata.AppendToOutgoingContext(context.Background(), "x-user-id", "e2e"), time.Minute)
 		defer cancel()
 		_, err := fixture.checkpoints.DeleteCheckpoint(ctx, &apiv1alpha1.DeleteCheckpointRequest{CheckpointId: created.GetCheckpoint().GetId()})
-		require.NoError(t, err)
+		if status.Code(err) != codes.NotFound {
+			require.NoError(t, err)
+		}
 	})
 	resume := func(ctx context.Context) *a2atype.Task {
 		t.Helper()
